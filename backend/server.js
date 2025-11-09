@@ -26,6 +26,7 @@ db.serialize(() => {
     username TEXT UNIQUE NOT NULL,
     email TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL,
+    is_admin INTEGER DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )`);
 
@@ -118,6 +119,21 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
+// Middleware to verify admin access
+const authenticateAdmin = (req, res, next) => {
+  authenticateToken(req, res, () => {
+    db.get('SELECT is_admin FROM users WHERE id = ?', [req.user.id], (err, user) => {
+      if (err) {
+        return res.status(500).json({ error: 'Database error' });
+      }
+      if (!user || !user.is_admin) {
+        return res.status(403).json({ error: 'Admin access required' });
+      }
+      next();
+    });
+  });
+};
+
 // Auth Routes
 app.post('/api/register', async (req, res) => {
   try {
@@ -130,7 +146,7 @@ app.post('/api/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     db.run(
-      'INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
+      'INSERT INTO users (username, email, password, is_admin) VALUES (?, ?, ?, 0)',
       [username, email, hashedPassword],
       function(err) {
         if (err) {
@@ -141,14 +157,14 @@ app.post('/api/register', async (req, res) => {
         }
 
         const token = jwt.sign(
-          { id: this.lastID, username, email },
+          { id: this.lastID, username, email, is_admin: 0 },
           JWT_SECRET,
           { expiresIn: '7d' }
         );
 
         res.json({
           token,
-          user: { id: this.lastID, username, email }
+          user: { id: this.lastID, username, email, is_admin: 0 }
         });
       }
     );
@@ -181,15 +197,18 @@ app.post('/api/login', (req, res) => {
         return res.status(401).json({ error: 'Invalid credentials' });
       }
 
+      // Ensure is_admin is properly set (handle both 0/1 and true/false)
+      const isAdmin = user.is_admin === 1 || user.is_admin === true ? 1 : 0;
+
       const token = jwt.sign(
-        { id: user.id, username: user.username, email: user.email },
+        { id: user.id, username: user.username, email: user.email, is_admin: isAdmin },
         JWT_SECRET,
         { expiresIn: '7d' }
       );
 
       res.json({
         token,
-        user: { id: user.id, username: user.username, email: user.email }
+        user: { id: user.id, username: user.username, email: user.email, is_admin: isAdmin }
       });
     }
   );
@@ -197,6 +216,7 @@ app.post('/api/login', (req, res) => {
 
 // Dialogue Routes
 app.get('/api/dialogue/random', authenticateToken, (req, res) => {
+  // First, get all dialogues the user hasn't rated yet
   db.all(
     `SELECT d.* FROM dialogues d 
      LEFT JOIN ratings r ON d.dialogue_id = r.dialogue_id AND r.user_id = ?
@@ -210,24 +230,26 @@ app.get('/api/dialogue/random', authenticateToken, (req, res) => {
       }
 
       if (rows.length === 0) {
-        // If user has rated all dialogues, return a random one anyway
-        db.all(
-          'SELECT * FROM dialogues ORDER BY RANDOM() LIMIT 1',
-          [],
-          (err, allRows) => {
-            if (err) {
-              return res.status(500).json({ error: 'Database error' });
-            }
-            if (allRows.length === 0) {
-              return res.status(404).json({ error: 'No dialogues available' });
-            }
-            const dialogue = JSON.parse(allRows[0].dialogue_data);
-            res.json({ ...dialogue, db_id: allRows[0].id, dialogue_id: allRows[0].dialogue_id });
-          }
-        );
-      } else {
+        // User has rated all dialogues - return empty
+        return res.json({ 
+          message: 'You have rated all available dialogues',
+          dialogue: null,
+          all_rated: true
+        });
+      }
+
+      // Return the unrated dialogue
+      try {
         const dialogue = JSON.parse(rows[0].dialogue_data);
-        res.json({ ...dialogue, db_id: rows[0].id, dialogue_id: rows[0].dialogue_id });
+        res.json({ 
+          ...dialogue, 
+          db_id: rows[0].id, 
+          dialogue_id: rows[0].dialogue_id,
+          all_rated: false
+        });
+      } catch (parseErr) {
+        console.error('Error parsing dialogue data:', parseErr);
+        return res.status(500).json({ error: 'Error parsing dialogue data' });
       }
     }
   );
@@ -348,6 +370,240 @@ app.get('/api/ratings/:dialogueId', authenticateToken, (req, res) => {
       });
     }
   );
+});
+
+// Admin Routes
+app.get('/api/admin/stats', authenticateAdmin, (req, res) => {
+  const stats = {};
+  
+  // Get total users
+  db.get('SELECT COUNT(*) as count FROM users', [], (err, row) => {
+    if (err) return res.status(500).json({ error: 'Database error' });
+    stats.totalUsers = row.count;
+    
+    // Get total ratings
+    db.get('SELECT COUNT(*) as count FROM ratings', [], (err, row) => {
+      if (err) return res.status(500).json({ error: 'Database error' });
+      stats.totalRatings = row.count;
+      
+      // Get total dialogues
+      db.get('SELECT COUNT(*) as count FROM dialogues', [], (err, row) => {
+        if (err) return res.status(500).json({ error: 'Database error' });
+        stats.totalDialogues = row.count;
+        
+        // Get average ratings per metric
+        db.all(`
+          SELECT 
+            AVG(realism) as avg_realism,
+            AVG(conciseness) as avg_conciseness,
+            AVG(coherence) as avg_coherence,
+            AVG(overall_naturalness) as avg_overall_naturalness,
+            AVG(utterance_realism) as avg_utterance_realism,
+            AVG(script_following) as avg_script_following
+          FROM ratings
+          WHERE realism IS NOT NULL
+        `, [], (err, rows) => {
+          if (err) {
+            console.error('Error getting average ratings:', err);
+            stats.averageRatings = {
+              realism: 0, conciseness: 0, coherence: 0,
+              overall_naturalness: 0, utterance_realism: 0, script_following: 0
+            };
+            stats.ratingsByDate = [];
+            return res.json(stats);
+          }
+          
+          if (rows.length > 0 && rows[0].avg_realism !== null) {
+            stats.averageRatings = {
+              realism: parseFloat(rows[0].avg_realism || 0).toFixed(2),
+              conciseness: parseFloat(rows[0].avg_conciseness || 0).toFixed(2),
+              coherence: parseFloat(rows[0].avg_coherence || 0).toFixed(2),
+              overall_naturalness: parseFloat(rows[0].avg_overall_naturalness || 0).toFixed(2),
+              utterance_realism: parseFloat(rows[0].avg_utterance_realism || 0).toFixed(2),
+              script_following: parseFloat(rows[0].avg_script_following || 0).toFixed(2)
+            };
+          } else {
+            stats.averageRatings = {
+              realism: 0, conciseness: 0, coherence: 0,
+              overall_naturalness: 0, utterance_realism: 0, script_following: 0
+            };
+          }
+          
+          // Get ratings by date
+          db.all(`
+            SELECT DATE(created_at) as date, COUNT(*) as count
+            FROM ratings
+            GROUP BY DATE(created_at)
+            ORDER BY date DESC
+            LIMIT 30
+          `, [], (err, dateRows) => {
+            if (err) {
+              console.error('Error getting ratings by date:', err);
+              stats.ratingsByDate = [];
+            } else {
+              stats.ratingsByDate = dateRows || [];
+            }
+            
+            res.json(stats);
+          });
+        });
+      });
+    });
+  });
+});
+
+app.get('/api/admin/users', authenticateAdmin, (req, res) => {
+  db.all(`
+    SELECT 
+      u.id, u.username, u.email, u.is_admin, u.created_at,
+      COUNT(r.id) as rating_count
+    FROM users u
+    LEFT JOIN ratings r ON u.id = r.user_id
+    GROUP BY u.id
+    ORDER BY u.created_at DESC
+  `, [], (err, rows) => {
+    if (err) {
+      console.error('Error getting users:', err);
+      return res.status(500).json({ error: 'Database error: ' + err.message });
+    }
+    res.json(rows || []);
+  });
+});
+
+app.get('/api/admin/ratings', authenticateAdmin, (req, res) => {
+  const limit = parseInt(req.query.limit) || 100;
+  const offset = parseInt(req.query.offset) || 0;
+  
+  db.all(`
+    SELECT 
+      r.*,
+      u.username,
+      d.product_title,
+      d.dialogue_data
+    FROM ratings r
+    JOIN users u ON r.user_id = u.id
+    JOIN dialogues d ON r.dialogue_id = d.dialogue_id
+    ORDER BY r.created_at DESC
+    LIMIT ? OFFSET ?
+  `, [limit, offset], (err, rows) => {
+    if (err) {
+      console.error('Error getting ratings:', err);
+      return res.status(500).json({ error: 'Database error: ' + err.message });
+    }
+    
+    if (!rows || rows.length === 0) {
+      return res.json([]);
+    }
+    
+    const ratings = rows.map(row => {
+      try {
+        return {
+          id: row.id,
+          user_id: row.user_id,
+          username: row.username,
+          dialogue_id: row.dialogue_id,
+          product_title: row.product_title,
+          ratings: {
+            realism: row.realism,
+            conciseness: row.conciseness,
+            coherence: row.coherence,
+            overall_naturalness: row.overall_naturalness,
+            utterance_realism: row.utterance_realism,
+            script_following: row.script_following
+          },
+          created_at: row.created_at,
+          dialogue: row.dialogue_data ? JSON.parse(row.dialogue_data) : null
+        };
+      } catch (parseErr) {
+        console.error('Error parsing dialogue data:', parseErr);
+        return {
+          id: row.id,
+          user_id: row.user_id,
+          username: row.username,
+          dialogue_id: row.dialogue_id,
+          product_title: row.product_title,
+          ratings: {
+            realism: row.realism,
+            conciseness: row.conciseness,
+            coherence: row.coherence,
+            overall_naturalness: row.overall_naturalness,
+            utterance_realism: row.utterance_realism,
+            script_following: row.script_following
+          },
+          created_at: row.created_at,
+          dialogue: null
+        };
+      }
+    });
+    
+    res.json(ratings);
+  });
+});
+
+app.get('/api/admin/dialogues', authenticateAdmin, (req, res) => {
+  db.all(`
+    SELECT 
+      d.*,
+      COUNT(r.id) as rating_count,
+      AVG(r.realism) as avg_realism,
+      AVG(r.conciseness) as avg_conciseness,
+      AVG(r.coherence) as avg_coherence,
+      AVG(r.overall_naturalness) as avg_overall_naturalness,
+      AVG(r.utterance_realism) as avg_utterance_realism,
+      AVG(r.script_following) as avg_script_following
+    FROM dialogues d
+    LEFT JOIN ratings r ON d.dialogue_id = r.dialogue_id
+    GROUP BY d.id
+    ORDER BY rating_count DESC, d.created_at DESC
+  `, [], (err, rows) => {
+    if (err) {
+      console.error('Error getting dialogues:', err);
+      return res.status(500).json({ error: 'Database error: ' + err.message });
+    }
+    
+    if (!rows || rows.length === 0) {
+      return res.json([]);
+    }
+    
+    const dialogues = rows.map(row => {
+      try {
+        return {
+          id: row.id,
+          dialogue_id: row.dialogue_id,
+          product_id: row.product_id,
+          product_title: row.product_title,
+          rating_count: row.rating_count || 0,
+          average_ratings: {
+            realism: row.avg_realism ? parseFloat(row.avg_realism).toFixed(2) : null,
+            conciseness: row.avg_conciseness ? parseFloat(row.avg_conciseness).toFixed(2) : null,
+            coherence: row.avg_coherence ? parseFloat(row.avg_coherence).toFixed(2) : null,
+            overall_naturalness: row.avg_overall_naturalness ? parseFloat(row.avg_overall_naturalness).toFixed(2) : null,
+            utterance_realism: row.avg_utterance_realism ? parseFloat(row.avg_utterance_realism).toFixed(2) : null,
+            script_following: row.avg_script_following ? parseFloat(row.avg_script_following).toFixed(2) : null
+          },
+          dialogue: row.dialogue_data ? JSON.parse(row.dialogue_data) : null,
+          created_at: row.created_at
+        };
+      } catch (parseErr) {
+        console.error('Error parsing dialogue data:', parseErr);
+        return {
+          id: row.id,
+          dialogue_id: row.dialogue_id,
+          product_id: row.product_id,
+          product_title: row.product_title,
+          rating_count: row.rating_count || 0,
+          average_ratings: {
+            realism: null, conciseness: null, coherence: null,
+            overall_naturalness: null, utterance_realism: null, script_following: null
+          },
+          dialogue: null,
+          created_at: row.created_at
+        };
+      }
+    });
+    
+    res.json(dialogues);
+  });
 });
 
 // Initialize dialogues on startup

@@ -83,16 +83,31 @@ const Dashboard = () => {
     setSuccess('');
     try {
       const response = await axios.get(`${API_URL}/dialogue/random`);
-      setDialogue(response.data);
-      // Reset ratings when loading new dialogue
-      setRatings({
-        realism: 3,
-        conciseness: 3,
-        coherence: 3,
-        overall_naturalness: 3,
-        utterance_realism: 3,
-        script_following: 3
-      });
+      
+      // Check if user has rated all dialogues
+      if (response.data.all_rated === true || response.data.dialogue === null) {
+        setDialogue(null);
+        setError('You have rated all available dialogues! There are no more dialogues to rate.');
+        return;
+      }
+      
+      // Check if response has dialogue data (normal response)
+      if (response.data.dialogue_id) {
+        setDialogue(response.data);
+        // Reset ratings when loading new dialogue
+        setRatings({
+          realism: 3,
+          conciseness: 3,
+          coherence: 3,
+          overall_naturalness: 3,
+          utterance_realism: 3,
+          script_following: 3
+        });
+      } else {
+        // Unexpected response format
+        setDialogue(null);
+        setError('Unexpected response from server');
+      }
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to load dialogue');
     } finally {
@@ -197,9 +212,19 @@ const Dashboard = () => {
         <div className="container">
           <div className="card">
             <div className="error">{error}</div>
-            <button onClick={loadRandomDialogue} className="btn btn-primary" style={{ marginTop: '20px' }}>
-              Try Again
-            </button>
+            {error.includes('rated all available') ? (
+              <div style={{ marginTop: '20px', padding: '20px', background: '#e3f2fd', borderRadius: '8px' }}>
+                <h3 style={{ color: '#1976d2', marginBottom: '10px' }}>🎉 Congratulations!</h3>
+                <p>You have completed rating all available dialogues. Thank you for your participation!</p>
+                <p style={{ marginTop: '10px', fontSize: '14px', color: '#666' }}>
+                  You can view your rating history in the "Rating History" section.
+                </p>
+              </div>
+            ) : (
+              <button onClick={loadRandomDialogue} className="btn btn-primary" style={{ marginTop: '20px' }}>
+                Try Again
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -371,6 +396,11 @@ const Navbar = ({ user, logout }) => {
         <a href="#" onClick={(e) => { e.preventDefault(); navigate('/history'); }}>
           Rating History
         </a>
+        {(user?.is_admin === 1 || user?.is_admin === true || user?.is_admin === '1') && (
+          <a href="#" onClick={(e) => { e.preventDefault(); navigate('/admin'); }}>
+            Admin Dashboard
+          </a>
+        )}
         <span className="user-info">Welcome, {user?.username}</span>
         <button
           onClick={logout}
