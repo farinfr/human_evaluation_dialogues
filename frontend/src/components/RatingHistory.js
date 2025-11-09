@@ -164,6 +164,21 @@ const RatingHistory = () => {
                       <h3 style={{ marginBottom: '10px', color: '#333' }}>
                         {rating.product_title || 'Dialogue'}
                       </h3>
+                      <div style={{ marginBottom: '15px', fontSize: '14px', color: '#555' }}>
+                        <strong>Kind:</strong>{' '}
+                        <span
+                          style={{
+                            display: 'inline-block',
+                            padding: '2px 8px',
+                            borderRadius: '12px',
+                            backgroundColor: '#e8eaf6',
+                            color: '#3f51b5',
+                            fontWeight: 600
+                          }}
+                        >
+                          {rating.kind ?? rating.dialogue?.kind ?? 'N/A'}
+                        </span>
+                      </div>
                       <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
                         <div>
                           <strong>Realism:</strong>{' '}

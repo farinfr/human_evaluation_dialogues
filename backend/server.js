@@ -233,43 +233,155 @@ app.post('/api/login', (req, res) => {
 
 // Dialogue Routes
 app.get('/api/dialogue/random', authenticateToken, (req, res) => {
-  // First, get all dialogues the user hasn't rated yet
-  db.all(
-    `SELECT d.* FROM dialogues d 
-     LEFT JOIN ratings r ON d.dialogue_id = r.dialogue_id AND r.user_id = ?
-     WHERE r.id IS NULL
-     ORDER BY RANDOM()
-     LIMIT 1`,
-    [req.user.id],
-    (err, rows) => {
-      if (err) {
+  const userId = req.user.id;
+
+  const sendDialogue = (row) => {
+    if (!row) {
+      return res.json({
+        message: 'You have rated all available dialogues',
+        dialogue: null,
+        all_rated: true
+      });
+    }
+
+    try {
+      const dialogue = JSON.parse(row.dialogue_data);
+      res.json({
+        ...dialogue,
+        kind: row.kind !== undefined ? row.kind : dialogue.kind,
+        db_id: row.id,
+        dialogue_id: row.dialogue_id,
+        all_rated: false
+      });
+    } catch (parseErr) {
+      console.error('Error parsing dialogue data:', parseErr);
+      return res.status(500).json({ error: 'Error parsing dialogue data' });
+    }
+  };
+
+  const fetchPartialProduct = () => {
+    const partialProductQuery = `
+      WITH total_kinds AS (
+        SELECT product_id, COUNT(DISTINCT kind) AS total_kinds
+        FROM dialogues
+        GROUP BY product_id
+      ),
+      user_rated AS (
+        SELECT d.product_id, COUNT(DISTINCT d.kind) AS rated_kinds
+        FROM ratings r
+        JOIN dialogues d ON r.dialogue_id = d.dialogue_id
+        WHERE r.user_id = ?
+        GROUP BY d.product_id
+      )
+      SELECT tk.product_id
+      FROM total_kinds tk
+      JOIN user_rated ur ON tk.product_id = ur.product_id
+      WHERE ur.rated_kinds < tk.total_kinds
+      ORDER BY (tk.total_kinds - ur.rated_kinds) DESC, tk.product_id
+      LIMIT 1
+    `;
+
+    db.get(partialProductQuery, [userId], (partialErr, partialRow) => {
+      if (partialErr) {
+        console.error('Error selecting partially rated product:', partialErr);
         return res.status(500).json({ error: 'Database error' });
       }
 
-      if (rows.length === 0) {
-        // User has rated all dialogues - return empty
-        return res.json({ 
-          message: 'You have rated all available dialogues',
-          dialogue: null,
-          all_rated: true
-        });
+      if (partialRow) {
+        db.get(
+          `SELECT d.* FROM dialogues d
+           LEFT JOIN ratings r ON d.dialogue_id = r.dialogue_id AND r.user_id = ?
+           WHERE d.product_id = ? AND r.id IS NULL
+           ORDER BY RANDOM()
+           LIMIT 1`,
+          [userId, partialRow.product_id],
+          (dialogueErr, dialogueRow) => {
+            if (dialogueErr) {
+              console.error('Error selecting dialogue for partial product:', dialogueErr);
+              return res.status(500).json({ error: 'Database error' });
+            }
+
+            if (dialogueRow) {
+              return sendDialogue(dialogueRow);
+            }
+
+            // If no dialogue found (shouldn't happen), fallback to new product
+            fetchNewProduct();
+          }
+        );
+      } else {
+        // No partially rated product, look for a brand new product
+        fetchNewProduct();
+      }
+    });
+  };
+
+  const fetchNewProduct = () => {
+    const newProductQuery = `
+      SELECT d.product_id
+      FROM dialogues d
+      LEFT JOIN ratings r ON d.dialogue_id = r.dialogue_id AND r.user_id = ?
+      GROUP BY d.product_id
+      HAVING COUNT(r.id) = 0
+      ORDER BY RANDOM()
+      LIMIT 1
+    `;
+
+    db.get(newProductQuery, [userId], (newErr, newRow) => {
+      if (newErr) {
+        console.error('Error selecting new product:', newErr);
+        return res.status(500).json({ error: 'Database error' });
       }
 
-      // Return the unrated dialogue
-      try {
-        const dialogue = JSON.parse(rows[0].dialogue_data);
-        res.json({ 
-          ...dialogue, 
-          db_id: rows[0].id, 
-          dialogue_id: rows[0].dialogue_id,
-          all_rated: false
-        });
-      } catch (parseErr) {
-        console.error('Error parsing dialogue data:', parseErr);
-        return res.status(500).json({ error: 'Error parsing dialogue data' });
+      if (newRow) {
+        db.get(
+          `SELECT d.* FROM dialogues d
+           LEFT JOIN ratings r ON d.dialogue_id = r.dialogue_id AND r.user_id = ?
+           WHERE d.product_id = ? AND r.id IS NULL
+           ORDER BY RANDOM()
+           LIMIT 1`,
+          [userId, newRow.product_id],
+          (dialogueErr, dialogueRow) => {
+            if (dialogueErr) {
+              console.error('Error selecting dialogue for new product:', dialogueErr);
+              return res.status(500).json({ error: 'Database error' });
+            }
+
+            if (dialogueRow) {
+              return sendDialogue(dialogueRow);
+            }
+
+            // Fallback to general selection
+            fetchAnyRemaining();
+          }
+        );
+      } else {
+        // No brand-new products left, fetch any remaining unrated dialogue
+        fetchAnyRemaining();
       }
-    }
-  );
+    });
+  };
+
+  const fetchAnyRemaining = () => {
+    db.get(
+      `SELECT d.* FROM dialogues d
+       LEFT JOIN ratings r ON d.dialogue_id = r.dialogue_id AND r.user_id = ?
+       WHERE r.id IS NULL
+       ORDER BY RANDOM()
+       LIMIT 1`,
+      [userId],
+      (err, row) => {
+        if (err) {
+          console.error('Error selecting fallback dialogue:', err);
+          return res.status(500).json({ error: 'Database error' });
+        }
+
+        sendDialogue(row);
+      }
+    );
+  };
+
+  fetchPartialProduct();
 });
 
 app.get('/api/dialogue/:dialogueId', authenticateToken, (req, res) => {
@@ -327,7 +439,7 @@ app.post('/api/rating', authenticateToken, (req, res) => {
 
 app.get('/api/ratings/history', authenticateToken, (req, res) => {
   db.all(
-    `SELECT r.*, d.product_title, d.dialogue_data
+    `SELECT r.*, d.product_title, d.dialogue_data, d.kind
      FROM ratings r
      JOIN dialogues d ON r.dialogue_id = d.dialogue_id
      WHERE r.user_id = ?
@@ -342,6 +454,7 @@ app.get('/api/ratings/history', authenticateToken, (req, res) => {
         id: row.id,
         dialogue_id: row.dialogue_id,
         product_title: row.product_title,
+        kind: row.kind,
         ratings: {
           realism: row.realism,
           conciseness: row.conciseness,
