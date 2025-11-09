@@ -30,6 +30,25 @@ human-evaluation-dialougue/
 └── llm_generated_dialogues/  # Dialogue dataset
 ```
 
+## Quick Start
+
+**One-command start (Development):**
+```bash
+./start.sh
+```
+
+**One-command start (Production):**
+```bash
+./start-production.sh
+```
+
+**Stop servers:**
+```bash
+./stop.sh
+```
+
+For detailed deployment instructions, see [DEPLOYMENT.md](./DEPLOYMENT.md)
+
 ## Setup Instructions
 
 ### Backend Setup
@@ -58,6 +77,11 @@ npm run dev
 ```
 
 The backend will run on `http://localhost:5001`
+
+**Or use the quick start script:**
+```bash
+./start.sh
+```
 
 ### Frontend Setup
 

@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# Development Start Script for Dialogue Evaluation System
-# This script starts both backend and frontend in development mode
+# Production Start Script for Dialogue Evaluation System
+# This script starts both backend and frontend in production mode
 
 set -e  # Exit on error
 
 echo "=========================================="
-echo "Dialogue Evaluation System - Development"
+echo "Dialogue Evaluation System - Production"
 echo "=========================================="
 echo ""
 
@@ -57,11 +57,27 @@ cd backend
 
 if [ ! -d "node_modules" ]; then
     echo "Installing backend dependencies..."
-    npm install --cache /tmp/npm-cache 2>/dev/null || npm install
+    npm install --production
+fi
+
+# Check if database exists, if not it will be created on startup
+if [ ! -f "database.sqlite" ]; then
+    echo -e "${YELLOW}Database not found. It will be created on first run.${NC}"
+fi
+
+# Create .env if it doesn't exist
+if [ ! -f ".env" ]; then
+    echo "Creating .env file..."
+    cat > .env << EOF
+PORT=5001
+JWT_SECRET=$(openssl rand -hex 32)
+NODE_ENV=production
+EOF
+    echo -e "${GREEN}✓ Created .env file${NC}"
 fi
 
 # Start backend
-echo "Starting backend server on port 5001..."
+echo "Starting backend server..."
 npm start > ../backend.log 2>&1 &
 BACKEND_PID=$!
 cd ..
@@ -73,7 +89,6 @@ sleep 5
 # Check if backend started successfully
 if ! kill -0 $BACKEND_PID 2>/dev/null; then
     echo -e "${RED}Backend failed to start. Check backend.log for details.${NC}"
-    cat backend.log 2>/dev/null || true
     exit 1
 fi
 
@@ -91,22 +106,43 @@ cd frontend
 
 if [ ! -d "node_modules" ]; then
     echo "Installing frontend dependencies..."
-    npm install --cache /tmp/npm-cache 2>/dev/null || npm install
+    npm install
 fi
 
-# Start frontend
-echo "Starting frontend server on port 3000..."
-npm start > ../frontend.log 2>&1 &
-FRONTEND_PID=$!
+# Build frontend for production
+if [ ! -d "build" ]; then
+    echo "Building frontend for production..."
+    npm run build
+fi
+
+# Create .env if it doesn't exist
+if [ ! -f ".env" ]; then
+    echo "Creating .env file..."
+    cat > .env << EOF
+REACT_APP_API_URL=http://localhost:5001/api
+EOF
+    echo -e "${GREEN}✓ Created .env file${NC}"
+fi
+
+# Start frontend (production build with serve)
+if command -v serve &> /dev/null; then
+    echo "Starting frontend server (production build)..."
+    serve -s build -l 3000 > ../frontend.log 2>&1 &
+    FRONTEND_PID=$!
+else
+    echo "Installing 'serve' package to serve production build..."
+    npm install -g serve
+    serve -s build -l 3000 > ../frontend.log 2>&1 &
+    FRONTEND_PID=$!
+fi
 cd ..
 
 # Wait for frontend to start
-sleep 5
+sleep 3
 
 # Check if frontend started successfully
 if ! kill -0 $FRONTEND_PID 2>/dev/null; then
     echo -e "${RED}Frontend failed to start. Check frontend.log for details.${NC}"
-    cat frontend.log 2>/dev/null || true
     kill $BACKEND_PID 2>/dev/null || true
     exit 1
 fi

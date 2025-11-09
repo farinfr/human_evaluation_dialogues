@@ -38,6 +38,7 @@ db.serialize(() => {
     product_title TEXT,
     dialogue_data TEXT NOT NULL,
     source_file TEXT,
+    kind INTEGER DEFAULT 1 CHECK(kind >= 1 AND kind <= 4),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )`);
 
@@ -82,18 +83,21 @@ function loadDialogues() {
 // Populate dialogues in database
 function populateDialogues() {
   const dialogues = loadDialogues();
-  const stmt = db.prepare(`INSERT OR IGNORE INTO dialogues (dialogue_id, product_id, product_title, dialogue_data, source_file) 
-    VALUES (?, ?, ?, ?, ?)`);
+  const stmt = db.prepare(`INSERT OR IGNORE INTO dialogues (dialogue_id, product_id, product_title, dialogue_data, source_file, kind) 
+    VALUES (?, ?, ?, ?, ?, ?)`);
   
-  dialogues.forEach(dialogue => {
+  dialogues.forEach((dialogue) => {
     // Use consistent dialogue_id based on product_id
     const dialogueId = `dialogue_${dialogue.product_id}`;
+    // Get kind from JSON file, default to 1 if not present
+    const kind = dialogue.kind && dialogue.kind >= 1 && dialogue.kind <= 4 ? dialogue.kind : 1;
     stmt.run(
       dialogueId,
       dialogue.product_id,
       dialogue.product_title,
       JSON.stringify(dialogue),
-      'llm_generated_dialogues'
+      'llm_generated_dialogues',
+      kind
     );
   });
   
@@ -444,7 +448,44 @@ app.get('/api/admin/stats', authenticateAdmin, (req, res) => {
               stats.ratingsByDate = dateRows || [];
             }
             
-            res.json(stats);
+            // Get statistics grouped by kind
+            db.all(`
+              SELECT 
+                d.kind,
+                COUNT(DISTINCT d.id) as dialogue_count,
+                COUNT(r.id) as rating_count,
+                AVG(r.realism) as avg_realism,
+                AVG(r.conciseness) as avg_conciseness,
+                AVG(r.coherence) as avg_coherence,
+                AVG(r.overall_naturalness) as avg_overall_naturalness,
+                AVG(r.utterance_realism) as avg_utterance_realism,
+                AVG(r.script_following) as avg_script_following
+              FROM dialogues d
+              LEFT JOIN ratings r ON d.dialogue_id = r.dialogue_id
+              GROUP BY d.kind
+              ORDER BY d.kind
+            `, [], (err, kindRows) => {
+              if (err) {
+                console.error('Error getting statistics by kind:', err);
+                stats.byKind = [];
+              } else {
+                stats.byKind = (kindRows || []).map(row => ({
+                  kind: row.kind,
+                  dialogue_count: row.dialogue_count || 0,
+                  rating_count: row.rating_count || 0,
+                  average_ratings: {
+                    realism: row.avg_realism ? parseFloat(row.avg_realism).toFixed(2) : null,
+                    conciseness: row.avg_conciseness ? parseFloat(row.avg_conciseness).toFixed(2) : null,
+                    coherence: row.avg_coherence ? parseFloat(row.avg_coherence).toFixed(2) : null,
+                    overall_naturalness: row.avg_overall_naturalness ? parseFloat(row.avg_overall_naturalness).toFixed(2) : null,
+                    utterance_realism: row.avg_utterance_realism ? parseFloat(row.avg_utterance_realism).toFixed(2) : null,
+                    script_following: row.avg_script_following ? parseFloat(row.avg_script_following).toFixed(2) : null
+                  }
+                }));
+              }
+              
+              res.json(stats);
+            });
           });
         });
       });

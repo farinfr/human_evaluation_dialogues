@@ -214,6 +214,52 @@ const AdminDashboard = () => {
                 </div>
               </div>
             )}
+
+            {stats.byKind && stats.byKind.length > 0 && (
+              <div className="card">
+                <h2 style={{ marginBottom: '20px', color: '#667eea' }}>Statistics by Dialogue Kind</h2>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
+                  {stats.byKind.map((kindStat) => (
+                    <div key={kindStat.kind} style={{
+                      padding: '20px',
+                      background: '#f8f9fa',
+                      borderRadius: '8px',
+                      border: '2px solid #667eea'
+                    }}>
+                      <h3 style={{ marginBottom: '15px', color: '#667eea', fontSize: '20px' }}>
+                        Kind {kindStat.kind}
+                      </h3>
+                      <div style={{ marginBottom: '15px' }}>
+                        <div><strong>Dialogues:</strong> {kindStat.dialogue_count}</div>
+                        <div><strong>Ratings:</strong> {kindStat.rating_count}</div>
+                      </div>
+                      {kindStat.average_ratings && (
+                        <div>
+                          <strong style={{ display: 'block', marginBottom: '10px' }}>Average Ratings:</strong>
+                          {Object.entries(kindStat.average_ratings).map(([metric, value]) => (
+                            value !== null && (
+                              <div key={metric} style={{ 
+                                fontSize: '14px', 
+                                marginBottom: '5px',
+                                display: 'flex',
+                                justifyContent: 'space-between'
+                              }}>
+                                <span style={{ textTransform: 'capitalize' }}>
+                                  {metric.replace('_', ' ')}:
+                                </span>
+                                <span style={{ fontWeight: 'bold', color: '#667eea' }}>
+                                  {value}/5
+                                </span>
+                              </div>
+                            )
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </>
         )}
 
