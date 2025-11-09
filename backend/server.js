@@ -45,11 +45,12 @@ db.serialize(() => {
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
     dialogue_id TEXT NOT NULL,
-    reality INTEGER CHECK(reality >= 1 AND reality <= 5),
-    user_friendly INTEGER CHECK(user_friendly >= 1 AND user_friendly <= 5),
-    helpfulness INTEGER CHECK(helpfulness >= 1 AND helpfulness <= 5),
-    naturalness INTEGER CHECK(naturalness >= 1 AND naturalness <= 5),
-    overall INTEGER CHECK(overall >= 1 AND overall <= 5),
+    realism INTEGER CHECK(realism >= 1 AND realism <= 5),
+    conciseness INTEGER CHECK(conciseness >= 1 AND conciseness <= 5),
+    coherence INTEGER CHECK(coherence >= 1 AND coherence <= 5),
+    overall_naturalness INTEGER CHECK(overall_naturalness >= 1 AND overall_naturalness <= 5),
+    utterance_realism INTEGER CHECK(utterance_realism >= 1 AND utterance_realism <= 5),
+    script_following INTEGER CHECK(script_following >= 1 AND script_following <= 5),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id),
     UNIQUE(user_id, dialogue_id)
@@ -253,14 +254,14 @@ app.get('/api/dialogue/:dialogueId', authenticateToken, (req, res) => {
 
 // Rating Routes
 app.post('/api/rating', authenticateToken, (req, res) => {
-  const { dialogue_id, reality, user_friendly, helpfulness, naturalness, overall } = req.body;
+  const { dialogue_id, realism, conciseness, coherence, overall_naturalness, utterance_realism, script_following } = req.body;
 
   if (!dialogue_id) {
     return res.status(400).json({ error: 'Dialogue ID is required' });
   }
 
   // Validate ratings are between 1 and 5
-  const ratings = { reality, user_friendly, helpfulness, naturalness, overall };
+  const ratings = { realism, conciseness, coherence, overall_naturalness, utterance_realism, script_following };
   for (const [key, value] of Object.entries(ratings)) {
     if (value !== undefined && (value < 1 || value > 5)) {
       return res.status(400).json({ error: `${key} must be between 1 and 5` });
@@ -269,9 +270,9 @@ app.post('/api/rating', authenticateToken, (req, res) => {
 
   db.run(
     `INSERT OR REPLACE INTO ratings 
-     (user_id, dialogue_id, reality, user_friendly, helpfulness, naturalness, overall)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [req.user.id, dialogue_id, reality, user_friendly, helpfulness, naturalness, overall],
+     (user_id, dialogue_id, realism, conciseness, coherence, overall_naturalness, utterance_realism, script_following)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [req.user.id, dialogue_id, realism, conciseness, coherence, overall_naturalness, utterance_realism, script_following],
     function(err) {
       if (err) {
         return res.status(500).json({ error: 'Error saving rating' });
@@ -303,11 +304,12 @@ app.get('/api/ratings/history', authenticateToken, (req, res) => {
         dialogue_id: row.dialogue_id,
         product_title: row.product_title,
         ratings: {
-          reality: row.reality,
-          user_friendly: row.user_friendly,
-          helpfulness: row.helpfulness,
-          naturalness: row.naturalness,
-          overall: row.overall
+          realism: row.realism,
+          conciseness: row.conciseness,
+          coherence: row.coherence,
+          overall_naturalness: row.overall_naturalness,
+          utterance_realism: row.utterance_realism,
+          script_following: row.script_following
         },
         created_at: row.created_at,
         dialogue: JSON.parse(row.dialogue_data)
@@ -335,11 +337,12 @@ app.get('/api/ratings/:dialogueId', authenticateToken, (req, res) => {
       res.json({
         dialogue_id: row.dialogue_id,
         ratings: {
-          reality: row.reality,
-          user_friendly: row.user_friendly,
-          helpfulness: row.helpfulness,
-          naturalness: row.naturalness,
-          overall: row.overall
+          realism: row.realism,
+          conciseness: row.conciseness,
+          coherence: row.coherence,
+          overall_naturalness: row.overall_naturalness,
+          utterance_realism: row.utterance_realism,
+          script_following: row.script_following
         },
         created_at: row.created_at
       });

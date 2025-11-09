@@ -6,6 +6,56 @@ import '../App.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
 
+// Helper function to format text with proper bidirectional support
+const formatText = (text) => {
+  if (!text) return '';
+  
+  // Split text by English words/patterns and Persian text
+  const englishPattern = /([a-zA-Z0-9][a-zA-Z0-9\s\.\,\:\;\!\?\-\(\)]*[a-zA-Z0-9]|[a-zA-Z0-9])/g;
+  
+  const parts = [];
+  let lastIndex = 0;
+  let match;
+  
+  while ((match = englishPattern.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push({
+        text: text.substring(lastIndex, match.index),
+        isEnglish: false
+      });
+    }
+    
+    parts.push({
+      text: match[0],
+      isEnglish: true
+    });
+    
+    lastIndex = match.index + match[0].length;
+  }
+  
+  if (lastIndex < text.length) {
+    parts.push({
+      text: text.substring(lastIndex),
+      isEnglish: false
+    });
+  }
+  
+  if (parts.length === 0) {
+    return text;
+  }
+  
+  return parts.map((part, index) => {
+    if (part.isEnglish) {
+      return (
+        <span key={index} dir="ltr" style={{ display: 'inline-block', unicodeBidi: 'embed' }}>
+          {part.text}
+        </span>
+      );
+    }
+    return <span key={index}>{part.text}</span>;
+  });
+};
+
 const RatingHistory = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -116,38 +166,45 @@ const RatingHistory = () => {
                       </h3>
                       <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
                         <div>
-                          <strong>Reality:</strong>{' '}
+                          <strong>Realism:</strong>{' '}
                           <span style={{ color: '#667eea' }}>
-                            {'★'.repeat(rating.ratings.reality)}
-                            {'☆'.repeat(5 - rating.ratings.reality)} {rating.ratings.reality}/5
+                            {'★'.repeat(rating.ratings.realism || 0)}
+                            {'☆'.repeat(5 - (rating.ratings.realism || 0))} {rating.ratings.realism || 0}/5
                           </span>
                         </div>
                         <div>
-                          <strong>User-Friendly:</strong>{' '}
+                          <strong>Conciseness:</strong>{' '}
                           <span style={{ color: '#667eea' }}>
-                            {'★'.repeat(rating.ratings.user_friendly)}
-                            {'☆'.repeat(5 - rating.ratings.user_friendly)} {rating.ratings.user_friendly}/5
+                            {'★'.repeat(rating.ratings.conciseness || 0)}
+                            {'☆'.repeat(5 - (rating.ratings.conciseness || 0))} {rating.ratings.conciseness || 0}/5
                           </span>
                         </div>
                         <div>
-                          <strong>Helpfulness:</strong>{' '}
+                          <strong>Coherence:</strong>{' '}
                           <span style={{ color: '#667eea' }}>
-                            {'★'.repeat(rating.ratings.helpfulness)}
-                            {'☆'.repeat(5 - rating.ratings.helpfulness)} {rating.ratings.helpfulness}/5
+                            {'★'.repeat(rating.ratings.coherence || 0)}
+                            {'☆'.repeat(5 - (rating.ratings.coherence || 0))} {rating.ratings.coherence || 0}/5
                           </span>
                         </div>
                         <div>
-                          <strong>Naturalness:</strong>{' '}
+                          <strong>Overall Naturalness:</strong>{' '}
                           <span style={{ color: '#667eea' }}>
-                            {'★'.repeat(rating.ratings.naturalness)}
-                            {'☆'.repeat(5 - rating.ratings.naturalness)} {rating.ratings.naturalness}/5
+                            {'★'.repeat(rating.ratings.overall_naturalness || 0)}
+                            {'☆'.repeat(5 - (rating.ratings.overall_naturalness || 0))} {rating.ratings.overall_naturalness || 0}/5
                           </span>
                         </div>
                         <div>
-                          <strong>Overall:</strong>{' '}
+                          <strong>Utterance Realism:</strong>{' '}
                           <span style={{ color: '#667eea' }}>
-                            {'★'.repeat(rating.ratings.overall)}
-                            {'☆'.repeat(5 - rating.ratings.overall)} {rating.ratings.overall}/5
+                            {'★'.repeat(rating.ratings.utterance_realism || 0)}
+                            {'☆'.repeat(5 - (rating.ratings.utterance_realism || 0))} {rating.ratings.utterance_realism || 0}/5
+                          </span>
+                        </div>
+                        <div>
+                          <strong>Script-following:</strong>{' '}
+                          <span style={{ color: '#667eea' }}>
+                            {'★'.repeat(rating.ratings.script_following || 0)}
+                            {'☆'.repeat(5 - (rating.ratings.script_following || 0))} {rating.ratings.script_following || 0}/5
                           </span>
                         </div>
                       </div>
@@ -189,7 +246,15 @@ const RatingHistory = () => {
                             }}>
                               {turn.role === 'user' ? '👤 User' : '🤖 Assistant'}
                             </div>
-                            <div style={{ fontSize: '14px', color: '#333' }}>{turn.text}</div>
+                            <div style={{ 
+                              fontSize: '14px', 
+                              color: '#333',
+                              direction: 'rtl',
+                              textAlign: 'right',
+                              unicodeBidi: 'plaintext'
+                            }}>
+                              {formatText(turn.text)}
+                            </div>
                           </div>
                         ))}
                       </div>

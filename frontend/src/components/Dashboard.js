@@ -6,6 +6,56 @@ import '../App.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
 
+// Helper function to format text with proper bidirectional support
+const formatText = (text) => {
+  if (!text) return '';
+  
+  // Split text by English words/patterns and Persian text
+  const englishPattern = /([a-zA-Z0-9][a-zA-Z0-9\s\.\,\:\;\!\?\-\(\)]*[a-zA-Z0-9]|[a-zA-Z0-9])/g;
+  
+  const parts = [];
+  let lastIndex = 0;
+  let match;
+  
+  while ((match = englishPattern.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push({
+        text: text.substring(lastIndex, match.index),
+        isEnglish: false
+      });
+    }
+    
+    parts.push({
+      text: match[0],
+      isEnglish: true
+    });
+    
+    lastIndex = match.index + match[0].length;
+  }
+  
+  if (lastIndex < text.length) {
+    parts.push({
+      text: text.substring(lastIndex),
+      isEnglish: false
+    });
+  }
+  
+  if (parts.length === 0) {
+    return text;
+  }
+  
+  return parts.map((part, index) => {
+    if (part.isEnglish) {
+      return (
+        <span key={index} dir="ltr" style={{ display: 'inline-block', unicodeBidi: 'embed' }}>
+          {part.text}
+        </span>
+      );
+    }
+    return <span key={index}>{part.text}</span>;
+  });
+};
+
 const Dashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -13,11 +63,12 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [ratings, setRatings] = useState({
-    reality: 3,
-    user_friendly: 3,
-    helpfulness: 3,
-    naturalness: 3,
-    overall: 3
+    realism: 3,
+    conciseness: 3,
+    coherence: 3,
+    overall_naturalness: 3,
+    utterance_realism: 3,
+    script_following: 3
   });
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState('');
@@ -35,11 +86,12 @@ const Dashboard = () => {
       setDialogue(response.data);
       // Reset ratings when loading new dialogue
       setRatings({
-        reality: 3,
-        user_friendly: 3,
-        helpfulness: 3,
-        naturalness: 3,
-        overall: 3
+        realism: 3,
+        conciseness: 3,
+        coherence: 3,
+        overall_naturalness: 3,
+        utterance_realism: 3,
+        script_following: 3
       });
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to load dialogue');
@@ -78,11 +130,22 @@ const Dashboard = () => {
     }
   };
 
-  const StarRating = ({ value, onChange, label }) => (
-    <div style={{ marginBottom: '20px' }}>
-      <label style={{ display: 'block', marginBottom: '10px', fontWeight: '600' }}>
+  const StarRating = ({ value, onChange, label, description }) => (
+    <div style={{ marginBottom: '25px', padding: '15px', background: '#f8f9fa', borderRadius: '8px', border: '1px solid #e0e0e0' }}>
+      <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', fontSize: '16px', color: '#333' }}>
         {label}: {value} / 5
       </label>
+      {description && (
+        <div style={{ 
+          marginBottom: '12px', 
+          fontSize: '14px', 
+          color: '#666',
+          lineHeight: '1.5',
+          fontStyle: 'italic'
+        }}>
+          {description}
+        </div>
+      )}
       <div style={{ display: 'flex', gap: '10px' }}>
         {[1, 2, 3, 4, 5].map((star) => (
           <button
@@ -196,7 +259,14 @@ const Dashboard = () => {
                       }}>
                         {turn.role === 'user' ? '👤 User' : '🤖 Assistant'}
                       </div>
-                      <div style={{ color: '#333' }}>{turn.text}</div>
+                      <div style={{ 
+                        color: '#333',
+                        direction: 'rtl',
+                        textAlign: 'right',
+                        unicodeBidi: 'plaintext'
+                      }}>
+                        {formatText(turn.text)}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -208,9 +278,12 @@ const Dashboard = () => {
                   padding: '15px', 
                   background: '#fff3cd', 
                   borderRadius: '8px',
-                  border: '1px solid #ffc107'
+                  border: '1px solid #ffc107',
+                  direction: 'rtl',
+                  textAlign: 'right',
+                  unicodeBidi: 'plaintext'
                 }}>
-                  <strong>Summary:</strong> {dialogue.dialogue_summary}
+                  <strong>Summary:</strong> {formatText(dialogue.dialogue_summary)}
                 </div>
               )}
             </div>
@@ -220,29 +293,40 @@ const Dashboard = () => {
               
               <form onSubmit={handleSubmit}>
                 <StarRating
-                  label="Reality"
-                  value={ratings.reality}
-                  onChange={(value) => handleRatingChange('reality', value)}
+                  label="Realism"
+                  description="واقعیت‌گرایی: آیا گفتگو احتمال دارد در دنیای واقعی از نظر منطقی رخ دهد؟"
+                  value={ratings.realism}
+                  onChange={(value) => handleRatingChange('realism', value)}
                 />
                 <StarRating
-                  label="User-Friendly"
-                  value={ratings.user_friendly}
-                  onChange={(value) => handleRatingChange('user_friendly', value)}
+                  label="Conciseness"
+                  description="مختصر بودن: آیا گفتگو بیش از حد طولانی و پرحرف است؟"
+                  value={ratings.conciseness}
+                  onChange={(value) => handleRatingChange('conciseness', value)}
                 />
                 <StarRating
-                  label="Helpfulness"
-                  value={ratings.helpfulness}
-                  onChange={(value) => handleRatingChange('helpfulness', value)}
+                  label="Coherence"
+                  description="انسجام: آیا گفتگو روان و منسجم است و با تاریخچه گفتگو از ابتدا همخوانی دارد؟"
+                  value={ratings.coherence}
+                  onChange={(value) => handleRatingChange('coherence', value)}
                 />
                 <StarRating
-                  label="Naturalness"
-                  value={ratings.naturalness}
-                  onChange={(value) => handleRatingChange('naturalness', value)}
+                  label="Overall Naturalness"
+                  description="طبیعی بودن کلی: ارزیابی کلی ذهنی از گفتگو و اینکه آیا طبیعی به نظر می‌رسد؟"
+                  value={ratings.overall_naturalness}
+                  onChange={(value) => handleRatingChange('overall_naturalness', value)}
                 />
                 <StarRating
-                  label="Overall"
-                  value={ratings.overall}
-                  onChange={(value) => handleRatingChange('overall', value)}
+                  label="Utterance-level Realism"
+                  description="واقعیت‌گرایی در سطح گفتار: آیا هر گفتار احتمال دارد در دنیای واقعی از نظر منطقی بیان شود؟"
+                  value={ratings.utterance_realism}
+                  onChange={(value) => handleRatingChange('utterance_realism', value)}
+                />
+                <StarRating
+                  label="Script-following"
+                  description="پیروی از اسکریپت: آیا گفتارها با ویژگی‌های محصول و ترجیحات مشتری سازگار هستند؟"
+                  value={ratings.script_following}
+                  onChange={(value) => handleRatingChange('script_following', value)}
                 />
 
                 {error && <div className="error">{error}</div>}
