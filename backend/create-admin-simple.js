@@ -5,14 +5,24 @@ const path = require('path');
 const dbPath = path.join(__dirname, 'database.sqlite');
 const db = new sqlite3.Database(dbPath);
 
+// Get credentials from command line arguments or use defaults
+const args = process.argv.slice(2);
+const username = args[0] || 'admin';
+const email = args[1] || 'admin@example.com';
+const password = args[2] || 'admin123';
+
+if (!username || !email || !password) {
+  console.error('Usage: node create-admin-simple.js [username] [email] [password]');
+  console.error('Or use defaults: username=admin, email=admin@example.com, password=admin123');
+  process.exit(1);
+}
+
 async function createAdmin() {
-  const username = process.argv[2] || 'admin';
-  const email = process.argv[3] || 'admin@example.com';
-  const password = process.argv[4] || 'admin123';
-
-  console.log(`Creating admin user: ${username} (${email})`);
-
   try {
+    console.log('Creating admin user...');
+    console.log(`Username: ${username}`);
+    console.log(`Email: ${email}`);
+    
     const hashedPassword = await bcrypt.hash(password, 10);
 
     db.run(
@@ -32,9 +42,10 @@ async function createAdmin() {
                   process.exit(1);
                 }
                 console.log('✓ Admin user updated successfully!');
-                console.log(`Username: ${username}`);
-                console.log(`Email: ${email}`);
-                console.log(`Password: ${password}`);
+                console.log(`You can now login with:`);
+                console.log(`  Username: ${username}`);
+                console.log(`  Email: ${email}`);
+                console.log(`  Password: ${password}`);
                 db.close();
               }
             );
@@ -45,9 +56,10 @@ async function createAdmin() {
           }
         } else {
           console.log('✓ Admin user created successfully!');
-          console.log(`Username: ${username}`);
-          console.log(`Email: ${email}`);
-          console.log(`Password: ${password}`);
+          console.log(`You can now login with:`);
+          console.log(`  Username: ${username}`);
+          console.log(`  Email: ${email}`);
+          console.log(`  Password: ${password}`);
           db.close();
         }
       }
@@ -60,4 +72,3 @@ async function createAdmin() {
 }
 
 createAdmin();
-

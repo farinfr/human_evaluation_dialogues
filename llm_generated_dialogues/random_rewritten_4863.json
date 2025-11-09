@@ -1,0 +1,93 @@
+{
+  "product_id": 4863,
+  "product_title": "لپ تاپ 15.6 اینچی ایسوس مدل E510MA-U1503-Celeron N4020-4GB DDR4-256GB SSD-TFT",
+  "brand": "ایسوس",
+  "category": "لپ تاپ و الترابوک",
+  "price": null,
+  "cluster_id": "54",
+  "method": "random",
+  "dialogue_rounds": 12,
+  "num_features": 5,
+  "features": [
+    {
+      "feature_name": "اقلام همراه",
+      "feature_value": "دفترچه‌ راهنما / شارژر",
+      "custom_metric": 0.0
+    },
+    {
+      "feature_name": "امکانات دیگر",
+      "feature_value": "پورت HDMI 1.4",
+      "custom_metric": 0.0
+    },
+    {
+      "feature_name": "وزن",
+      "feature_value": "1.57 کیلوگرم",
+      "custom_metric": 0.0
+    },
+    {
+      "feature_name": "نوع حافظه داخلی",
+      "feature_value": "SSD",
+      "custom_metric": 0.0
+    },
+    {
+      "feature_name": "سیستم عامل",
+      "feature_value": "بدون سیستم عامل",
+      "custom_metric": 0.0
+    }
+  ],
+  "dialogue": [
+    {
+      "role": "user",
+      "text": "می‌خواهم یک لپ تاپ یا الترابوک پیدا کنم."
+    },
+    {
+      "role": "assistant",
+      "text": "البته، در این دسته محصولات مختلفی وجود دارد. آیا به اقلام همراه خاصی نیاز دارید؟"
+    },
+    {
+      "role": "user",
+      "text": "بله، می‌خواهم دفترچه راهنما و شارژر همراهش باشد."
+    },
+    {
+      "role": "assistant",
+      "text": "درست. حالا می‌تونیم جستجو رو ساده‌تر کنیم. آیا امکانات دیگه‌ای مثل پورت HDMI داره؟"
+    },
+    {
+      "role": "user",
+      "text": "بله، می‌خواهم پورت HDMI 1.4 داشته باشه."
+    },
+    {
+      "role": "assistant",
+      "text": "خب، پورت HDMI 1.4 مهمه. الان وزن رو چطور؟"
+    },
+    {
+      "role": "user",
+      "text": "می‌خواهم وزنش حدود 1.57 کیلوگرم باشه."
+    },
+    {
+      "role": "assistant",
+      "text": "باشه، وزن 1.57 کیلوگرم. حالا نوع حافظه داخلی چه‌طور؟"
+    },
+    {
+      "role": "user",
+      "text": "ترجیح می‌دهم SSD باشه."
+    },
+    {
+      "role": "assistant",
+      "text": "خوب، SSD مناسبه. سیستم عامل چه‌طور؟"
+    },
+    {
+      "role": "user",
+      "text": "می‌خواهم بدون سیستم عامل باشه."
+    },
+    {
+      "role": "assistant",
+      "text": "فهمیدم. بر اساس مشخصاتی که گفتید، لپ تاپ 15.6 اینچی ایسوس مدل E510MA-U1503-Celeron N4020-4GB DDR4-256GB SSD-TFT می‌تونه مناسب باشه."
+    }
+  ],
+  "llm_improvements": "گفتگو طبیعی‌تر و روان‌تر شد. استفاده از فرهنگ لغت ساده‌تر، حذف تکرارهای غیرضروری و بهبود جریان محاوره.",
+  "llm_rewritten": true,
+  "original_dialogue_rounds": 12,
+  "rewritten_dialogue_rounds": 12,
+  "kind": 2
+}

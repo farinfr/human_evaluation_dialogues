@@ -1,0 +1,93 @@
+{
+  "product_id": 4477,
+  "product_title": "لپ تاپ 15.6 اینچی ایسوس مدل TUF Gaming F15 FX507VI-F15.I74070-i7 13620H-64GB DDR5 4800MHz-4TB SSD-RTX4070 8GB-FHD 144Hz - کاستوم شده",
+  "brand": "ایسوس",
+  "category": "لپ تاپ و الترابوک",
+  "price": 1979000000,
+  "cluster_id": "50",
+  "method": "highest_metric",
+  "dialogue_rounds": 12,
+  "num_features": 5,
+  "features": [
+    {
+      "feature_name": "نسل پردازنده",
+      "feature_value": "نسل 13 اینتل",
+      "custom_metric": 0.11078
+    },
+    {
+      "feature_name": "ظرفیت حافظه رم (RAM)",
+      "feature_value": "64 گیگابایت",
+      "custom_metric": 0.003165
+    },
+    {
+      "feature_name": "توضیحات وبکم",
+      "feature_value": "دوربین با کیفیت 720p HD",
+      "custom_metric": 0.002748
+    },
+    {
+      "feature_name": "سایر توضیحات درگاه‌های ارتباطی",
+      "feature_value": "دو عدد ( یک عدد از نوع USB 3.2 با پشتیبانی از شارژ، G-Sync و خروجی تصویر (DisplayPort) و یک عدد از نوع Thunderbolt 4 با پشتیبانی از خروجی تصویر (DisplayPort))",
+      "custom_metric": 0.001484
+    },
+    {
+      "feature_name": "مدل پردازنده مرکزی لپ‌تاپ",
+      "feature_value": "Core i7-13620H",
+      "custom_metric": 0.001366
+    }
+  ],
+  "dialogue": [
+    {
+      "role": "user",
+      "text": "می‌خواهم یک لپ تاپ یا الترابوک پیدا کنم."
+    },
+    {
+      "role": "assistant",
+      "text": "البته. در این دسته محصولات مختلفی وجود دارند. نسل پردازنده‌ای که می‌خواهید چیست؟"
+    },
+    {
+      "role": "user",
+      "text": "می‌خواهم نسل 13 اینتل باشد."
+    },
+    {
+      "role": "assistant",
+      "text": "باشه، نسل پردازنده 13 اینتل. حالا ظرفیت حافظه رم (RAM) چقدر می‌خواهید؟"
+    },
+    {
+      "role": "user",
+      "text": "64 گیگابایت."
+    },
+    {
+      "role": "assistant",
+      "text": "درست. 64 گیگابایت حافظه رم. وبکم چطور؟ به چه کیفیتی نیاز دارید؟"
+    },
+    {
+      "role": "user",
+      "text": "دوربین 720p HD."
+    },
+    {
+      "role": "assistant",
+      "text": "خب، دوربین 720p HD. حالا درباره درگاه‌های ارتباطی چه می‌خواهید؟"
+    },
+    {
+      "role": "user",
+      "text": "دو عدد درگاه: یکی USB 3.2 با شارژ، G-Sync و DisplayPort و دیگری Thunderbolt 4 با DisplayPort."
+    },
+    {
+      "role": "assistant",
+      "text": "متوجه شدم. دو درگاه شامل USB 3.2 و Thunderbolt 4 هستند. حالا مدل پردازنده مرکزی چی باشد؟"
+    },
+    {
+      "role": "user",
+      "text": "Core i7-13620H."
+    },
+    {
+      "role": "assistant",
+      "text": "عالی. بر اساس مشخصاتی که گفتید، لپ تاپ 15.6 اینچی ایسوس مدل TUF Gaming F15 FX507VI-F15.I74070-i7 13620H-64GB DDR5 4800MHz-4TB SSD-RTX4070 8GB-FHD 144Hz - کاستوم شده از برند ایسوس با قیمت 1,979,000,000 تومان می‌تواند مناسب باشد."
+    }
+  ],
+  "llm_improvements": "گفتگو طبیعی‌تر شده است. از ساختار جملات و واژگان روزمره استفاده شده و جلوی تکرار و ابهام گرفته شده. مباحث به صورت منطقی و بدون اضافات زائد ادامه یافته‌اند.",
+  "llm_rewritten": true,
+  "original_dialogue_rounds": 12,
+  "rewritten_dialogue_rounds": 12,
+  "kind": 4
+}

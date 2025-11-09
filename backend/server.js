@@ -70,6 +70,8 @@ function loadDialogues() {
       if (file.endsWith('.json') && file !== 'llm_generated_dialogues.json') {
         const filePath = path.join(dialoguesDir, file);
         const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+        // Store filename with dialogue data for unique identification
+        data._filename = file;
         dialogues.push(data);
       }
     });
@@ -83,26 +85,37 @@ function loadDialogues() {
 // Populate dialogues in database
 function populateDialogues() {
   const dialogues = loadDialogues();
-  const stmt = db.prepare(`INSERT OR IGNORE INTO dialogues (dialogue_id, product_id, product_title, dialogue_data, source_file, kind) 
+  const stmt = db.prepare(`INSERT OR REPLACE INTO dialogues (dialogue_id, product_id, product_title, dialogue_data, source_file, kind) 
     VALUES (?, ?, ?, ?, ?, ?)`);
   
+  let insertedCount = 0;
   dialogues.forEach((dialogue) => {
-    // Use consistent dialogue_id based on product_id
-    const dialogueId = `dialogue_${dialogue.product_id}`;
+    // Use filename-based dialogue_id to ensure uniqueness (remove .json extension)
+    const filename = dialogue._filename || `dialogue_${dialogue.product_id}_${Date.now()}.json`;
+    const dialogueId = filename.replace('.json', '');
     // Get kind from JSON file, default to 1 if not present
     const kind = dialogue.kind && dialogue.kind >= 1 && dialogue.kind <= 4 ? dialogue.kind : 1;
+    
     stmt.run(
       dialogueId,
       dialogue.product_id,
       dialogue.product_title,
       JSON.stringify(dialogue),
       'llm_generated_dialogues',
-      kind
+      kind,
+      function(err) {
+        if (err) {
+          console.error(`Error inserting dialogue ${dialogueId}:`, err);
+        } else {
+          insertedCount++;
+        }
+      }
     );
   });
   
-  stmt.finalize();
-  console.log(`Loaded ${dialogues.length} dialogues into database`);
+  stmt.finalize(() => {
+    console.log(`Loaded ${insertedCount} dialogues into database`);
+  });
 }
 
 // Middleware to verify JWT token

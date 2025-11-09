@@ -1,0 +1,93 @@
+{
+  "product_id": 1454,
+  "product_title": "گوشی موبایل شیائومی مدل redmi 9T M2010J19ST ظرفیت 128 گیگابایت و رم 6 گیگابایت",
+  "brand": "شیائومی",
+  "category": "گوشی موبایل",
+  "price": null,
+  "cluster_id": "17",
+  "method": "random",
+  "dialogue_rounds": 12,
+  "num_features": 5,
+  "features": [
+    {
+      "feature_name": "نوع محافظ صفحه نمایش گوشی",
+      "feature_value": "Corning Gorilla Glass 3",
+      "custom_metric": 0.0
+    },
+    {
+      "feature_name": "مشخصات بلوتوث",
+      "feature_value": "A2DP, LE",
+      "custom_metric": 0.0
+    },
+    {
+      "feature_name": "حس‌گرها",
+      "feature_value": "اثرانگشت روی لبه (FingerPrint|Side-Mounted), شتاب‌سنج (Accelerometer), قطب‌نما (Compass), مجاورت (Proximity)",
+      "custom_metric": 0.0
+    },
+    {
+      "feature_name": "پردازنده‌",
+      "feature_value": "Quad-Core Kryo 260 Gold + Quad-Core Kryo 260 Silver CPU",
+      "custom_metric": 0.0
+    },
+    {
+      "feature_name": "تراکم پیکسلی",
+      "feature_value": "395 پیکسل بر اینچ",
+      "custom_metric": 0.0
+    }
+  ],
+  "dialogue": [
+    {
+      "role": "user",
+      "text": "می‌خواهم یک گوشی موبایل پیدا کنم."
+    },
+    {
+      "role": "assistant",
+      "text": "البته، در دسته گوشی موبایل محصولات خوبی وجود دارد. برای بهتر کمک کردن، لطفاً نوع محافظ صفحه نمایش گوشی که دوست دارید را بگویید."
+    },
+    {
+      "role": "user",
+      "text": "می‌خواهم از نوع Corning Gorilla Glass 3 باشد."
+    },
+    {
+      "role": "assistant",
+      "text": "درست است. شما به یک گوشی با محافظ صفحه نمایش Corning Gorilla Glass 3 نیاز دارید. حالا درباره مشخصات بلوتوث چه می‌خواهید؟"
+    },
+    {
+      "role": "user",
+      "text": "می‌خواهم از بلوتوث A2DP و LE استفاده کنم."
+    },
+    {
+      "role": "assistant",
+      "text": "خوب، پس بلوتوث A2DP و LE مورد نظرتان است. حالا حس‌گرهایی که دوست دارید چی هستند؟"
+    },
+    {
+      "role": "user",
+      "text": "می‌خواهم حس‌گرهای اثرانگشت روی لبه، شتاب‌سنج، قطب‌نما و مجاورت داشته باشم."
+    },
+    {
+      "role": "assistant",
+      "text": "فهمیدم. حس‌گرهای مورد نظرتان شامل اثرانگشت روی لبه، شتاب‌سنج، قطب‌نما و مجاورت هستند. حالا درباره پردازنده چه می‌خواهید؟"
+    },
+    {
+      "role": "user",
+      "text": "می‌خواهم پردازنده‌ای با چهار هسته Kryo 260 Gold و چهار هسته Kryo 260 Silver باشد."
+    },
+    {
+      "role": "assistant",
+      "text": "درست. پردازنده Quad-Core Kryo 260 Gold + Quad-Core Kryo 260 Silver مورد نظرتان است. در نهایت، تراکم پیکسلی چقدر می‌خواهید؟"
+    },
+    {
+      "role": "user",
+      "text": "می‌خواهم تراکم پیکسلی 395 پیکسل بر اینچ باشد."
+    },
+    {
+      "role": "assistant",
+      "text": "عالی. بر اساس مشخصاتی که گفتید، گوشی مدل Redmi 9T M2010J19ST از شیائومی با ظرفیت 128 گیگابایت و رم 6 گیگابایت می‌تواند مناسب شما باشد."
+    }
+  ],
+  "llm_improvements": "گفتگو طبیعی‌تر، جریان دارتر و بدون تکرار شد. سوالات به صورت طبیعی و متناسب با فرآیند خرید ارائه شدند و عبارات کوتاه‌تر و روان‌تر شد.",
+  "llm_rewritten": true,
+  "original_dialogue_rounds": 12,
+  "rewritten_dialogue_rounds": 12,
+  "kind": 2
+}

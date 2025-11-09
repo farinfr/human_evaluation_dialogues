@@ -1,0 +1,93 @@
+{
+  "product_id": 1454,
+  "product_title": "گوشی موبایل شیائومی مدل redmi 9T M2010J19ST ظرفیت 128 گیگابایت و رم 6 گیگابایت",
+  "brand": "شیائومی",
+  "category": "گوشی موبایل",
+  "price": null,
+  "cluster_id": "17",
+  "method": "highest_metric",
+  "dialogue_rounds": 12,
+  "num_features": 5,
+  "features": [
+    {
+      "feature_name": "استاندارد کارت حافظه",
+      "feature_value": "UFS 2.2",
+      "custom_metric": 0.002297
+    },
+    {
+      "feature_name": "شبکه‌های ارتباطی قابل پشتیبانی",
+      "feature_value": "Infrared, NFC, OTG, Wi-Fi, بلوتوث, رادیو",
+      "custom_metric": 0.000916
+    },
+    {
+      "feature_name": "حافظه داخلی",
+      "feature_value": "128 گیگابایت",
+      "custom_metric": 0.000725
+    },
+    {
+      "feature_name": "تکنولوژی‌های مکان‌یابی (GPS)",
+      "feature_value": "A-GPS, BDS(Beidou), GALILEO, GLONASS",
+      "custom_metric": 0.00061
+    },
+    {
+      "feature_name": "مقدار RAM",
+      "feature_value": "6 گیگابایت",
+      "custom_metric": 0.000439
+    }
+  ],
+  "dialogue": [
+    {
+      "role": "user",
+      "text": "می‌خواهم گوشی موبایلی بخرم."
+    },
+    {
+      "role": "assistant",
+      "text": "بلاکه، در گروه گوشی موبایل چندین محصول مختلف وجود دارد. اول به نظرتون استاندارد کارت حافظه چی باشه؟"
+    },
+    {
+      "role": "user",
+      "text": "می‌خوام UFS 2.2 باشه."
+    },
+    {
+      "role": "assistant",
+      "text": "خوب، UFS 2.2 را انتخاب کردید. حالا شبکه‌های ارتباطی که بهشون نیاز دارید چی هستن؟"
+    },
+    {
+      "role": "user",
+      "text": "Infrared, NFC, OTG, Wi-Fi, بلوتوث و رادیو."
+    },
+    {
+      "role": "assistant",
+      "text": "فهمیدم. شبکه‌های ارتباطی رو انتخاب کردید. بعد حافظه داخلی چقدر می‌خواید؟"
+    },
+    {
+      "role": "user",
+      "text": "128 گیگابایت."
+    },
+    {
+      "role": "assistant",
+      "text": "128 گیگابایت حافظه داخلی. حالا تکنولوژی‌های مکان‌یابی رو هم می‌خواید چه جوری باشه؟"
+    },
+    {
+      "role": "user",
+      "text": "A-GPS, BDS, GALILEO و GLONASS."
+    },
+    {
+      "role": "assistant",
+      "text": "درست. تکنولوژی‌های مکان‌یابی رو انتخاب کردید. آخرین سوال: RAM چقدر می‌خواید؟"
+    },
+    {
+      "role": "user",
+      "text": "6 گیگابایت."
+    },
+    {
+      "role": "assistant",
+      "text": "خب، بر اساس نیازهاتون، گوشی شیائومی مدل Redmi 9T M2010J19ST با 128 گیگابایت حافظه و 6 گیگابایت RAM رو پیشنهاد می‌دم."
+    }
+  ],
+  "llm_improvements": "گفتگو طبیعی‌تر و سریع‌تر شده، از فرمهای غیرضروری خودداری شده و جملات ساده‌تر و روان‌تر نوشته شده.",
+  "llm_rewritten": true,
+  "original_dialogue_rounds": 12,
+  "rewritten_dialogue_rounds": 12,
+  "kind": 4
+}
