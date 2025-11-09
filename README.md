@@ -46,7 +46,7 @@ npm install
 
 3. Create a `.env` file (optional, defaults are provided):
 ```
-PORT=5000
+PORT=5001
 JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
 ```
 
@@ -57,7 +57,7 @@ npm start
 npm run dev
 ```
 
-The backend will run on `http://localhost:5000`
+The backend will run on `http://localhost:5001`
 
 ### Frontend Setup
 
@@ -73,7 +73,7 @@ npm install
 
 3. Create a `.env` file (optional):
 ```
-REACT_APP_API_URL=http://localhost:5000/api
+REACT_APP_API_URL=http://localhost:5001/api
 ```
 
 4. Start the development server:
